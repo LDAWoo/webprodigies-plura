@@ -337,7 +337,7 @@ const AgencyDetails = ({ data }: Props) => {
                         </form>
                     </Form>
                     {data?.id && (
-                        <div className="flex flex-col items-center justify-between rounded-lg  border border-destructive gap-2 p-3 ml-4">
+                        <div className="flex flex-col items-center justify-between rounded-lg  border border-destructive gap-2 p-3 mt-4">
                             <div>
                                 <div>Gander Zone</div>
                             </div>

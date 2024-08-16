@@ -49,17 +49,18 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({ details, agencyDe
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: details?.name ?? "",
-            companyEmail: details?.companyEmail ?? "",
-            companyPhone: details?.companyPhone ?? "",
-            address: details?.address ?? "",
-            city: details?.city ?? "",
-            subAccountLogo: details?.subAccountLogo ?? "",
-            zipCode: details?.zipCode ?? "",
-            state: details?.state ?? "",
-            country: details?.country ?? "",
+            name: details?.name,
+            companyEmail: details?.companyEmail,
+            companyPhone: details?.companyPhone,
+            address: details?.address,
+            city: details?.city,
+            zipCode: details?.zipCode,
+            state: details?.state,
+            country: details?.country,
+            subAccountLogo: details?.subAccountLogo,
         },
     });
+    console.log(details);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
@@ -157,7 +158,7 @@ const SubAccountDetails: React.FC<SubAccountDetailsProps> = ({ details, agencyDe
                                 name="companyEmail"
                                 render={({ field }) => (
                                     <FormItem className="flex-1">
-                                        <FormLabel>Acount Email</FormLabel>
+                                        <FormLabel>Account Email</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Email" {...field} />
                                         </FormControl>

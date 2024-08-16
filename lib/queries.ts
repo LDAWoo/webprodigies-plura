@@ -1,10 +1,31 @@
 "use server";
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
+import type { User as AuthUser } from "@clerk/nextjs/server";
 import { db } from "./db";
 import { redirect } from "next/navigation";
 import { Agency, Plan, SubAccount, User } from "@prisma/client";
 import { v4 } from "uuid";
+
+export const getUser = async (id: string) => {
+    const user = await db.user.findUnique({
+        where: {
+            id,
+        },
+    });
+
+    return user;
+};
+
+export const deleteUser = async (userId: string) => {
+    await clerkClient.users.updateUserMetadata(userId, {
+        privateMetadata: {
+            role: undefined,
+        },
+    });
+    const deletedUser = await db.user.delete({ where: { id: userId } });
+    return deletedUser;
+};
 
 export const getAuthUserDetails = async () => {
     const user = await currentUser();
@@ -117,6 +138,45 @@ export const saveActivityLogsNotification = async ({ agencyId, description, subA
     }
 };
 
+export const updateUser = async (user: Partial<User>) => {
+    const response = await db.user.update({
+        where: {
+            email: user.email,
+        },
+        data: {
+            ...user,
+        },
+    });
+    await clerkClient.users.updateUserMetadata(response.id, {
+        publicMetadata: {
+            role: user.role || "SUBACCOUNT_USER",
+        },
+    });
+
+    return response;
+};
+
+export const changeUserPermission = async (permissionId: string, userEmail: string, subAccountId: string, permission: boolean) => {
+    try {
+        const response = await db.permissions.upsert({
+            where: {
+                id: permissionId,
+            },
+            update: {
+                access: permission,
+            },
+            create: {
+                access: permission,
+                email: userEmail,
+                subAccountId: subAccountId,
+            },
+        });
+        return response;
+    } catch (err) {
+        console.log(err);
+    }
+};
+
 export const createTeamUser = async (agencyId: String, user: User) => {
     if (user.role === "AGENCY_OWNER") return null;
     const response = await db.user.create({
@@ -189,6 +249,16 @@ export const updateAgencyDetails = async (agencyId: string, agencyDetails: Parti
     const response = await db.agency.update({
         where: { id: agencyId },
         data: { ...agencyDetails },
+    });
+    return response;
+};
+
+export const getAgencyDetails = async (agencyId: string) => {
+    const response = await db.agency.findUnique({
+        where: { id: agencyId },
+        include: {
+            SubAccount: true,
+        },
     });
     return response;
 };
@@ -288,7 +358,7 @@ export const upsertAgency = async (agency: Agency, price?: Plan) => {
     }
 };
 
-export const getNotificationAnUser = async (agencyId: string) => {
+export const getNotificationAndUser = async (agencyId: string) => {
     try {
         const response = await db.notification.findMany({
             where: {
@@ -313,7 +383,7 @@ export const upsertSubAccount = async (subAccount: SubAccount) => {
     const agencyOwner = await db.user.findFirst({
         where: {
             Agency: {
-                id: subAccount.id,
+                id: subAccount.agencyId,
             },
             role: "AGENCY_OWNER",
         },
@@ -384,6 +454,53 @@ export const upsertSubAccount = async (subAccount: SubAccount) => {
                     },
                 ],
             },
+        },
+    });
+
+    return response;
+};
+
+export const getUserDetailsByAuthEmail = async (authEmail: AuthUser) => {
+    try {
+        const response = await db.user.findUnique({
+            where: {
+                email: authEmail.emailAddresses[0].emailAddress,
+            },
+        });
+
+        return response;
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+export const getUserPermissions = async (userId: string) => {
+    const response = await db.user.findUnique({
+        where: { id: userId },
+        select: {
+            Permissions: {
+                include: {
+                    SubAccount: true,
+                },
+            },
+        },
+    });
+
+    return response;
+};
+
+export const getSubAccountDetails = async (subaccountId: string) => {
+    const response = await db.subAccount.findUnique({
+        where: { id: subaccountId },
+    });
+
+    return response;
+};
+
+export const deleteSubAccount = async (subaccountId: string) => {
+    const response = await db.subAccount.delete({
+        where: {
+            id: subaccountId,
         },
     });
 

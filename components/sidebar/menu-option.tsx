@@ -46,7 +46,7 @@ const MenuOptions = ({ defaultOpen, subAccounts, sidebarOpt, sidebarLogo, detail
             </SheetTrigger>
 
             <SheetContent
-                showX={true}
+                showX={!defaultOpen}
                 side={"left"}
                 className={clsx(`bg-background/80 backdrop-blur-xl fixed top-0 border-r p-6`, {
                     "hidden md:inline-block z-0 w-[300px]": defaultOpen,
@@ -72,7 +72,7 @@ const MenuOptions = ({ defaultOpen, subAccounts, sidebarOpt, sidebarLogo, detail
                                 </div>
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 h-80 mt-4 z-[200]">
+                        <PopoverContent className="w-80 h-auto mt-4 z-[200]">
                             {
                                 <Command className="rounded-lg">
                                     <CommandInput placeholder="Accounts..." />
@@ -178,7 +178,7 @@ const MenuOptions = ({ defaultOpen, subAccounts, sidebarOpt, sidebarLogo, detail
 
                                         return (
                                             <CommandItem key={sidebarOption.id} className="w-full">
-                                                <Link href={sidebarOption.link} className="flex gap-2 items-center hoverL bg-transparent rounded-md transition-all ">
+                                                <Link href={sidebarOption.link} className="flex gap-2 items-center hoverL bg-transparent rounded-md w-full transition-all ">
                                                     {val}
                                                     <span>{sidebarOption.name}</span>
                                                 </Link>
