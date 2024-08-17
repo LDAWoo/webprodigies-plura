@@ -1,5 +1,5 @@
 "use client";
-import { useModal } from "@/providers/model.provider";
+import { useModal } from "@/providers/modal.provider";
 import React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 

@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useToast } from "@/components/ui/use-toast";
 import { deleteUser, getUser } from "@/lib/queries";
 import { UsersWithAgencySubAccountPermissionsSidebarOptions } from "@/lib/types";
-import { useModal } from "@/providers/model.provider";
+import { useModal } from "@/providers/modal.provider";
 import { Role } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";

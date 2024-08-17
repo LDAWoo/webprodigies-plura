@@ -1,5 +1,5 @@
-import { Notification, Prisma, Role } from "@prisma/client";
-import { getAuthUserDetails, getUserPermissions } from "./queries";
+import { Contact, Lane, Notification, Prisma, Role, Tag, Ticket, User } from "@prisma/client";
+import { _getTicketsWithAllRelations, getAuthUserDetails, getMedia, getPipelineDetails, getTicketsWithTags, getUserPermissions } from "./queries";
 import { db } from "./db";
 
 export type NotificationWithUser =
@@ -32,3 +32,25 @@ export type UserWithPermissionsAndSubAccounts = Prisma.PromiseReturnType<typeof 
 export type AuthUSerWithAgencySigebarOptionsSubAccounts = Prisma.PromiseReturnType<typeof getAuthUserDetails>;
 
 export type UsersWithAgencySubAccountPermissionsSidebarOptions = Prisma.PromiseReturnType<typeof __getUsersWithAgencySubAccountPermissionsSidebarOptions>;
+
+export type GetMediaFiles = Prisma.PromiseReturnType<typeof getMedia>;
+
+export type CreateMediaType = Prisma.MediaCreateWithoutSubaccountInput;
+
+export type CreatePipeLineType = Prisma.PipelineUncheckedCreateWithoutLaneInput;
+
+export type TicketAndTags = Ticket & {
+    Tags: Tag[];
+    Assigned: User | null;
+    Customer: Contact | null;
+};
+
+export type LaneDetails = Lane & {
+    Tickets: TicketAndTags[];
+};
+
+export type PipelineDetailsWithLanesCardsTagsTickets = Prisma.PromiseReturnType<typeof getPipelineDetails>;
+
+export type TicketWithTags = Prisma.PromiseReturnType<typeof getTicketsWithTags>;
+
+export type TicketDetails = Prisma.PromiseReturnType<typeof _getTicketsWithAllRelations>;

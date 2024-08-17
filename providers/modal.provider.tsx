@@ -1,6 +1,7 @@
 "use client";
 
 import useMounted from "@/hooks/useMounted";
+import { TicketDetails } from "@/lib/types";
 import { Agency, User } from "@prisma/client";
 import { createContext, useContext, useState } from "react";
 
@@ -11,6 +12,7 @@ interface ModalProviderProps {
 export type ModalData = {
     user?: User;
     agency?: Agency;
+    ticket?: TicketDetails[0];
 };
 
 type ModalContextType = {

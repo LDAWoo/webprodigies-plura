@@ -119,3 +119,9 @@ B (255 */
         transform: scale(1);
     }
 }
+
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow: scroll;
+}

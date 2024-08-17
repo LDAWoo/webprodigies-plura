@@ -2,7 +2,7 @@
 import { useToast } from "@/components/ui/use-toast";
 import { changeUserPermission, getAuthUserDetails, getUserPermissions, saveActivityLogsNotification, updateUser } from "@/lib/queries";
 import { AuthUSerWithAgencySigebarOptionsSubAccounts, UserWithPermissionsAndSubAccounts } from "@/lib/types";
-import { useModal } from "@/providers/model.provider";
+import { useModal } from "@/providers/modal.provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubAccount, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
@@ -71,6 +71,7 @@ const UserDetails = ({ id, type, userData, subAccounts }: Props) => {
         const getPermissions = async () => {
             if (!data.user) return;
             const permissions = await getUserPermissions(data.user.id);
+
             setSubAccountPermissions(permissions);
         };
         getPermissions();
@@ -105,11 +106,17 @@ const UserDetails = ({ id, type, userData, subAccounts }: Props) => {
             });
 
             if (subAccountPermissions) {
-                subAccountPermissions.Permissions.find((p) => {
-                    if (p.subAccountId === subAccountId) {
-                        return { ...p, access: !p.access };
-                    }
-                    return p;
+                setSubAccountPermissions((prev) => {
+                    if (!prev) return prev;
+
+                    return {
+                        Permissions: prev.Permissions.map((p) => {
+                            if (p.subAccountId === subAccountId) {
+                                return { ...p, access: !p.access };
+                            }
+                            return p;
+                        }),
+                    };
                 });
             }
         } else {
@@ -120,8 +127,8 @@ const UserDetails = ({ id, type, userData, subAccounts }: Props) => {
             });
 
             router.refresh();
-            setLoadingPermissions(false);
         }
+        setLoadingPermissions(false);
     };
 
     const onSubmit = async (values: z.infer<typeof userDataSchema>) => {
@@ -256,7 +263,7 @@ const UserDetails = ({ id, type, userData, subAccounts }: Props) => {
                                         const subAccountPermissionsDetails = subAccountPermissions?.Permissions.find((p) => p.subAccountId === subAccount.id);
 
                                         return (
-                                            <div key={subAccount.id} className="flex flex-col items-center justify-between rounded-lg border p-4">
+                                            <div key={subAccount.id} className="flex items-center justify-between rounded-lg border p-4">
                                                 <div>
                                                     <p>{subAccount.name}</p>
                                                 </div>
