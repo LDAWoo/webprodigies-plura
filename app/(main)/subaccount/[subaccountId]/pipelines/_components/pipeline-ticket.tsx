@@ -1,3 +1,4 @@
+import TicketForm from "@/components/forms/ticket-form";
 import CustomModal from "@/components/global/custom-modal";
 import TagComponent from "@/components/global/tag";
 import LinkIcon from "@/components/icons/link";
@@ -6,29 +7,72 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useToast } from "@/components/ui/use-toast";
+import { deleteTicket, saveActivityLogsNotification } from "@/lib/queries";
 import { TicketWithTags } from "@/lib/types";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { Contact2, Edit, MoreHorizontalIcon, Trash, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Draggable } from "react-beautiful-dnd";
 
 type Props = {
     setAllTickets: Dispatch<SetStateAction<TicketWithTags>>;
     ticket: TicketWithTags[0];
     subAccountId: string;
-    allTickets: TicketWithTags;
     index: number;
 };
 
-const PipelineTicket = ({ setAllTickets, ticket, subAccountId, allTickets, index }: Props) => {
+const PipelineTicket = ({ setAllTickets, ticket, subAccountId, index }: Props) => {
     const router = useRouter();
-    const { setOpen, data } = useModal();
+    const { toast } = useToast();
+    const { setOpen } = useModal();
+
+    const editNewTicket = (ticket: TicketWithTags[0]) => {
+        setAllTickets((tickets) => tickets.map((t) => (t.id === ticket.id ? ticket : t)));
+    };
+
+    const handleClickEdit = () => {
+        setOpen(
+            <CustomModal title="Update Ticket Details" subheading="">
+                <TicketForm getNewTicket={editNewTicket} laneId={ticket.laneId} subaccountId={subAccountId} />
+            </CustomModal>,
+            async () => {
+                return { ticket: ticket };
+            }
+        );
+    };
+
+    const handleDeleteTicket = async () => {
+        try {
+            setAllTickets((tickets) => tickets.filter((t) => t.id !== ticket.id));
+            const response = await deleteTicket(ticket.id);
+            toast({
+                title: "Deleted",
+                description: "Deleted ticket from lane.",
+            });
+            await saveActivityLogsNotification({
+                agencyId: undefined,
+                description: `Delete a ticket | ${response?.name}`,
+                subAccountId,
+            });
+
+            router.refresh();
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Oppse!",
+                description: "Could not delete the ticket.",
+            });
+            console.log(error);
+        }
+    };
+
     return (
         <Draggable draggableId={ticket.id.toString()} index={index}>
             {(provided, snapshot) => {
                 if (snapshot.isDragging) {
-                    const offset = { x: 300, y: 0 };
+                    const offset = { x: 300, y: 20 };
                     //@ts-ignore
                     const x = provided.draggableProps.style?.left - offset.x;
                     //@ts-ignore
@@ -115,10 +159,7 @@ const PipelineTicket = ({ setAllTickets, ticket, subAccountId, allTickets, index
                                                 Delete Ticket
                                             </DropdownMenuItem>
                                         </AlertDialogTrigger>
-                                        <DropdownMenuItem
-                                            className="flex items-center gap-2"
-                                            // onClick={handleClickEdit}
-                                        >
+                                        <DropdownMenuItem className="flex items-center gap-2" onClick={handleClickEdit}>
                                             <Edit size={15} />
                                             Edit Ticket
                                         </DropdownMenuItem>
@@ -131,10 +172,7 @@ const PipelineTicket = ({ setAllTickets, ticket, subAccountId, allTickets, index
                                     </AlertDialogHeader>
                                     <AlertDialogFooter className="flex items-center">
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                            className="bg-destructive"
-                                            // onClick={handleDeleteTicket}
-                                        >
+                                        <AlertDialogAction className="bg-destructive" onClick={handleDeleteTicket}>
                                             Delete
                                         </AlertDialogAction>
                                     </AlertDialogFooter>

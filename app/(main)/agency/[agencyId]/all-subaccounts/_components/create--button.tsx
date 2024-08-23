@@ -2,7 +2,7 @@
 import SubAccountDetails from "@/components/forms/subaccount-details";
 import CustomModal from "@/components/global/custom-modal";
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { Agency, AgencySidebarOption, SubAccount, User } from "@prisma/client";
 import { PlusCircleIcon } from "lucide-react";
 import React from "react";

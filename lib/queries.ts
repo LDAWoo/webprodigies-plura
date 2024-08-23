@@ -6,7 +6,9 @@ import { Agency, Funnel, Lane, Plan, Prisma, Role, SubAccount, Ticket, User } fr
 import { redirect } from "next/navigation";
 import { v4 } from "uuid";
 import { db } from "./db";
-import { CreateMediaType, CreatePipeLineType } from "./types";
+import { CreateFunnelFormSchema, CreateMediaType, CreatePipeLineType, UpsertFunnelPage } from "./types";
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 export const getUser = async (id: string) => {
     const user = await db.user.findUnique({
@@ -178,12 +180,9 @@ export const changeUserPermission = async (permissionId: string, userEmail: stri
     }
 };
 
-export const createTeamUser = async (agencyId: String, user: User) => {
+export const createTeamUser = async (user: User) => {
     if (user.role === "AGENCY_OWNER") return null;
-    const response = await db.user.create({
-        data: { ...user },
-    });
-
+    const response = await db.user.create({ data: { ...user } });
     return response;
 };
 
@@ -201,36 +200,38 @@ export const verifyAndAcceptInvitation = async () => {
     });
 
     if (invitationExists) {
-        const userDetails = await createTeamUser(invitationExists.agencyId, {
+        const exitsUser = await getAuthUserDetails();
+
+        if (exitsUser) {
+            return exitsUser.agencyId;
+        }
+
+        const userDetails = await createTeamUser({
+            email: invitationExists.email,
+            agencyId: invitationExists.agencyId,
+            avatarUrl: user.imageUrl,
             id: user.id,
             name: `${user.firstName} ${user.lastName}`,
-            email: invitationExists.email,
-            avatarUrl: user.imageUrl,
-            agencyId: invitationExists.agencyId,
             role: invitationExists.role,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
-
         await saveActivityLogsNotification({
             agencyId: invitationExists?.agencyId,
             description: "Joined",
             subAccountId: undefined,
         });
-
         if (userDetails) {
             await clerkClient.users.updateUserMetadata(user.id, {
                 privateMetadata: {
                     role: userDetails.role || "SUBACCOUNT_USER",
                 },
             });
-
             await db.invitation.delete({
                 where: {
                     email: userDetails.email,
                 },
             });
-
             return userDetails.agencyId;
         } else {
             return null;
@@ -576,6 +577,16 @@ export const getPipelineDetails = async (pipelineId: string) => {
     return response;
 };
 
+export const deletePipeline = async (pipelineId: string) => {
+    const response = await db.pipeline.delete({
+        where: {
+            id: pipelineId,
+        },
+    });
+
+    return response;
+};
+
 export const getLanesWithTicketAndTags = async (pipelineId: string) => {
     const response = await db.lane.findMany({
         where: {
@@ -625,7 +636,7 @@ export const getTicketsWithTags = async (pipelineId: string) => {
     return response;
 };
 
-export const upsertFunnel = async (subaccountId: string, funnel: Funnel, funnelId: string) => {
+export const upsertFunnel = async (subaccountId: string, funnel: z.infer<typeof CreateFunnelFormSchema> & { liveProducts: string }, funnelId: string) => {
     const response = await db.funnel.upsert({
         where: {
             id: funnelId,
@@ -669,6 +680,15 @@ export const upsertLane = async (lane: Prisma.LaneUncheckedCreateInput) => {
     return response;
 };
 
+export const deleteLane = async (laneId: string) => {
+    const response = await db.lane.delete({
+        where: {
+            id: laneId,
+        },
+    });
+    return response;
+};
+
 export const updateLanesOrder = async (lanes: Lane[]) => {
     try {
         const updateTrans = lanes.map((lane) =>
@@ -699,6 +719,16 @@ export const updateTicketsOrder = async (tickets: Ticket[]) => {
     } catch (error) {
         console.log(error, "ERROR UPDATE TICKETS ORDER");
     }
+};
+
+export const deleteTicket = async (ticketId: string) => {
+    const response = await db.ticket.delete({
+        where: {
+            id: ticketId,
+        },
+    });
+
+    return response;
 };
 
 export const _getTicketsWithAllRelations = async (laneId: string) => {
@@ -796,4 +826,118 @@ export const getTagsForSubaccount = async (subaccountId: string) => {
 export const deleteTag = async (tagId: string) => {
     const response = await db.tag.delete({ where: { id: tagId } });
     return response;
+};
+
+export const getContact = async (subaccountId: string) => {
+    const response = await db.subAccount.findUnique({
+        where: {
+            id: subaccountId,
+        },
+        include: {
+            Contact: {
+                include: {
+                    Ticket: {
+                        select: {
+                            value: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
+        },
+    });
+
+    return response;
+};
+
+export const upsertContact = async (contact: Prisma.ContactUncheckedCreateInput) => {
+    const response = await db.contact.upsert({
+        where: { id: contact.id || v4() },
+        update: contact,
+        create: contact,
+    });
+
+    return response;
+};
+
+export const getFunnels = async (subaccountId: string) => {
+    const response = await db.funnel.findMany({
+        where: {
+            subAccountId: subaccountId,
+        },
+        include: {
+            FunnelPages: true,
+        },
+    });
+
+    return response;
+};
+
+export const getFunnel = async (funnelId: string) => {
+    const funnel = await db.funnel.findUnique({
+        where: { id: funnelId },
+        include: {
+            FunnelPages: {
+                orderBy: {
+                    order: "asc",
+                },
+            },
+        },
+    });
+
+    return funnel;
+};
+
+export const upsertFunnelPage = async (subaccountId: string, funnelPage: UpsertFunnelPage, funnelId: string) => {
+    if (!subaccountId || !funnelId) return;
+
+    const response = await db.funnelPage.upsert({
+        where: {
+            id: funnelPage.id || "",
+        },
+        update: {
+            ...funnelPage,
+        },
+        create: {
+            ...funnelPage,
+            content: funnelPage.content
+                ? funnelPage.content
+                : JSON.stringify([
+                      {
+                          content: [],
+                          id: "__body",
+                          name: "Body",
+                          styles: {
+                              backgroundColor: "white",
+                              type: "_body",
+                          },
+                      },
+                  ]),
+            funnelId,
+        },
+    });
+
+    revalidatePath(`/subaccount/${subaccountId}/funnels/${funnelId}`);
+    return response;
+};
+
+export const deleteFunnelsPage = async (funnelPageId: string) => {
+    const response = await db.funnelPage.delete({
+        where: {
+            id: funnelPageId,
+        },
+    });
+
+    return response;
+};
+
+export const updateFunnelProducts = async (products: string, funnelId: string) => {
+    const data = await db.funnel.update({
+        where: { id: funnelId },
+        data: { liveProducts: products },
+    });
+
+    return data;
 };

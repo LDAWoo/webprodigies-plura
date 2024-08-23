@@ -5,7 +5,7 @@ import CustomModal from "@/components/global/custom-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from "@tanstack/react-table";
 import { Search } from "lucide-react";
 

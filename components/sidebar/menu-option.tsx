@@ -13,7 +13,7 @@ import { Button } from "../ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "../ui/sheet";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import CustomModal from "../global/custom-modal";
 import SubAccountDetails from "../forms/subaccount-details";
 import { Separator } from "../ui/separator";

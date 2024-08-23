@@ -1,6 +1,6 @@
 "use client";
 import { saveActivityLogsNotification, upsertPipeline } from "@/lib/queries";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pipeline } from "@prisma/client";
 import { useRouter } from "next/navigation";

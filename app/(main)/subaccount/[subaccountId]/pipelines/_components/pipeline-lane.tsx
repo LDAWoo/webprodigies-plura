@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LaneDetails, TicketWithTags } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { Edit, MoreVertical, PlusCircleIcon, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { Dispatch, SetStateAction, useMemo } from "react";
@@ -12,6 +12,9 @@ import { Draggable, Droppable } from "react-beautiful-dnd";
 import PipelineTicket from "./pipeline-ticket";
 import CustomModal from "@/components/global/custom-modal";
 import TicketForm from "@/components/forms/ticket-form";
+import CreateLaneForm from "@/components/forms/lane-form";
+import { deleteLane, saveActivityLogsNotification } from "@/lib/queries";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PipelineLaneProps {
     setAllTickets: Dispatch<SetStateAction<TicketWithTags>>;
@@ -26,6 +29,7 @@ interface PipelineLaneProps {
 const PipelineLane: React.FC<PipelineLaneProps> = ({ setAllTickets, allTickets, tickets, pipelineId, laneDetails, subaccountId, index }) => {
     const { setOpen } = useModal();
     const router = useRouter();
+    const { toast } = useToast();
 
     const amt = new Intl.NumberFormat(undefined, {
         style: "currency",
@@ -37,6 +41,39 @@ const PipelineLane: React.FC<PipelineLaneProps> = ({ setAllTickets, allTickets, 
     }, [tickets]);
 
     const randomColor = `#${Math.random().toString(16).slice(2, 8)}`;
+
+    const handleEditLane = () => {
+        setOpen(
+            <CustomModal title="Edit Lane Details" subheading="">
+                <CreateLaneForm pipelineId={pipelineId} defaultData={laneDetails} />
+            </CustomModal>
+        );
+    };
+
+    const handleDeleteLane = async () => {
+        try {
+            const response = await deleteLane(laneDetails.id);
+            await saveActivityLogsNotification({
+                agencyId: undefined,
+                description: `Deleted a lane | ${response?.name}`,
+                subAccountId: subaccountId,
+            });
+
+            toast({
+                title: "Deleted",
+                description: "Deleted lane successfully",
+            });
+
+            router.refresh();
+        } catch (err) {
+            console.log(err);
+            toast({
+                variant: "destructive",
+                title: "Oppse!",
+                description: "Could not delete lane",
+            });
+        }
+    };
 
     const addNewTicket = (ticket: TicketWithTags[0]) => {
         setAllTickets([...allTickets, ticket]);
@@ -93,7 +130,7 @@ const PipelineLane: React.FC<PipelineLaneProps> = ({ setAllTickets, allTickets, 
                                             <div className="h-full overflow-y-auto no-scrollbar pt-12 bg-slate-00">
                                                 <div {...provided.droppableProps} ref={provided.innerRef} className="mt-2 h-full">
                                                     {tickets.map((ticket, index) => (
-                                                        <PipelineTicket allTickets={allTickets} setAllTickets={setAllTickets} subAccountId={subaccountId} ticket={ticket} key={ticket.id.toString()} index={index} />
+                                                        <PipelineTicket setAllTickets={setAllTickets} subAccountId={subaccountId} ticket={ticket} key={ticket.id.toString()} index={index} />
                                                     ))}
                                                     {provided.placeholder}
                                                 </div>
@@ -111,10 +148,7 @@ const PipelineLane: React.FC<PipelineLaneProps> = ({ setAllTickets, allTickets, 
                                             </DropdownMenuItem>
                                         </AlertDialogTrigger>
 
-                                        <DropdownMenuItem
-                                            className="flex items-center gap-2"
-                                            //   onClick={handleEditLane}
-                                        >
+                                        <DropdownMenuItem className="flex items-center gap-2" onClick={handleEditLane}>
                                             <Edit size={15} />
                                             Edit
                                         </DropdownMenuItem>
@@ -131,10 +165,7 @@ const PipelineLane: React.FC<PipelineLaneProps> = ({ setAllTickets, allTickets, 
                                     </AlertDialogHeader>
                                     <AlertDialogFooter className="flex items-center">
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                            className="bg-destructive"
-                                            //   onClick={handleDeleteLane}
-                                        >
+                                        <AlertDialogAction className="bg-destructive" onClick={handleDeleteLane}>
                                             Continue
                                         </AlertDialogAction>
                                     </AlertDialogFooter>

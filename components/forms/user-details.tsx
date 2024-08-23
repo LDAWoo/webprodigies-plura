@@ -2,7 +2,7 @@
 import { useToast } from "@/components/ui/use-toast";
 import { changeUserPermission, getAuthUserDetails, getUserPermissions, saveActivityLogsNotification, updateUser } from "@/lib/queries";
 import { AuthUSerWithAgencySigebarOptionsSubAccounts, UserWithPermissionsAndSubAccounts } from "@/lib/types";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubAccount, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
@@ -125,9 +125,8 @@ const UserDetails = ({ id, type, userData, subAccounts }: Props) => {
                 title: "Oppse!",
                 description: "Could not update permissions",
             });
-
-            router.refresh();
         }
+        router.refresh();
         setLoadingPermissions(false);
     };
 

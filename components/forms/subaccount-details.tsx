@@ -3,7 +3,7 @@
 import { Agency, SubAccount } from "@prisma/client";
 import React, { useEffect } from "react";
 import { useToast } from "../ui/use-toast";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

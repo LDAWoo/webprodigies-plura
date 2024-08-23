@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import React from "react";
 import PipelineInfoBar from "../_components/pipeline-infobar";
 import PipelineView from "../_components/pipeline-view";
+import PipelineSettings from "../_components/pipeline-settings";
 
 type Props = {
     params: { subaccountId: string; pipelineId: string };
@@ -38,7 +39,9 @@ const Page = async ({ params }: Props) => {
             <TabsContent value="view">
                 <PipelineView lanes={lanes} pipelineDetails={pipelineDetails} pipelineId={params.pipelineId} subaccountId={params.subaccountId} updateLanesOrder={updateLanesOrder} updateTicketsOrder={updateTicketsOrder} />
             </TabsContent>
-            <TabsContent value="settings"></TabsContent>
+            <TabsContent value="settings">
+                <PipelineSettings pipelineId={params.pipelineId} pipelines={pipelines} subaccountId={params.subaccountId} />
+            </TabsContent>
         </Tabs>
     );
 };

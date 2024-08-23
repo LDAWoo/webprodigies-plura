@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { LaneDetails, PipelineDetailsWithLanesCardsTagsTickets, TicketAndTags } from "@/lib/types";
-import { useModal } from "@/providers/modal.provider";
+import { useModal } from "@/providers/modal-provider";
 import { Lane, Ticket } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";

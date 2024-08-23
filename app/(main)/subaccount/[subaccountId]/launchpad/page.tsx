@@ -2,6 +2,8 @@ import BlurPage from "@/components/global/blur-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
+import { getStripeOAuthLink } from "@/lib/utils";
 import { CheckCircleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,11 +30,30 @@ const Page = async ({ searchParams, params }: Props) => {
 
     const allDetailsExist = subAccountDetails.address && subAccountDetails.subAccountLogo && subAccountDetails.city && subAccountDetails.companyEmail && subAccountDetails.companyPhone && subAccountDetails.country && subAccountDetails.name && subAccountDetails.state;
 
-    const stripeOAuthLink = "";
+    const stripeOAuthLink = getStripeOAuthLink("subaccount", `launchpad__${subAccountDetails.id}`);
 
     let connectedStripeAccount = false;
 
-    if (allDetailsExist) {
+    if (searchParams.code) {
+        if (!subAccountDetails.connectAccountId) {
+            try {
+                const response = await stripe.oauth.token({
+                    grant_type: "authorization_code",
+                    code: searchParams.code,
+                });
+                await db.subAccount.update({
+                    where: {
+                        id: params.subaccountId,
+                    },
+                    data: {
+                        connectAccountId: response.stripe_user_id,
+                    },
+                });
+                connectedStripeAccount = true;
+            } catch (error) {
+                console.log("🔴 Could not connect stripe account", error);
+            }
+        }
     }
 
     return (
