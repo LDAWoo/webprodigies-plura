@@ -941,3 +941,12 @@ export const updateFunnelProducts = async (products: string, funnelId: string) =
 
     return data;
 };
+
+export const getFunnelPageDetails = async (funnelPageId: string) => {
+    const data = await db.funnelPage.findUnique({
+        where: {
+            id: funnelPageId,
+        },
+    });
+    return data;
+};
